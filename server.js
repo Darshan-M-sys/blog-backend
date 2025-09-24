@@ -22,12 +22,11 @@ connectionDB();
 app.use(express.json());
 
 // CORS configuration
-// Use your frontend URL in production
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 app.use(
   cors({
-    origin: FRONTEND_URL,
-    credentials: true,
+    origin: FRONTEND_URL, // ✅ must match deployed frontend domain
+    credentials: true,    // ✅ allow cookies
   })
 );
 
@@ -38,13 +37,14 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI, // MongoDB URI from env
+      mongoUrl: process.env.MONGO_URI, // MongoDB URI
       ttl: 60 * 60 * 24, // 1 day
     }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use HTTPS in prod
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
+      secure: process.env.NODE_ENV === "production", // ✅ only works on HTTPS
     },
   })
 );
@@ -58,5 +58,6 @@ app.use("/", blogRoute);
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`✅ Server is running on port ${PORT}`);
+  console.log(`🌍 Allowed frontend: ${FRONTEND_URL}`);
 });
